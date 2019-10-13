@@ -1,0 +1,25 @@
+{
+  "name": "serverless-cake-ordering-system-",
+  "version": "1.0.0",
+  "description": "",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/debrajpaul/serverless-cake-ordering-system-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/debrajpaul/serverless-cake-ordering-system-/issues"
+  },
+  "homepage": "https://github.com/debrajpaul/serverless-cake-ordering-system-#readme",
+  "dependencies": {
+    "aws-sdk": "^2.543.0",
+    "serverless-pseudo-parameters": "^2.5.0",
+    "uuid": "^3.3.3"
+  }
+}

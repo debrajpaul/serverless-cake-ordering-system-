@@ -1,0 +1,77 @@
+service: serverless-cake-ordering-system
+
+plugins:
+    - serverless-pseudo-parameters
+
+provider:
+    name: aws
+    runtime: nodejs10.x
+
+    iamRoleStatements:
+        - Effect: Allow
+          Action:
+              - dynamodb:PutItem
+              - dynamodb:GetItem
+          Resource:
+              - arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/ordersTable
+        - Effect: Allow
+          Action:
+              - kinesis:PutRecord
+          Resource:
+              - arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
+        - Effect: Allow
+          Action:
+              - ses:SendEmail
+          Resource:
+              - "*"
+          Condition:
+              StringEquals:
+                  ses:FromAddress:
+                      - order@thtt.us
+functions:
+    createOrder:
+        handler: handler.createOrder
+        events:
+            - http:
+                  path: /order
+                  method: post
+        environment:
+            orderTableName: ordersTable
+            orderStreamName: order-events
+    orderFulfillment:
+        handler: handler.orderFulfillment
+        events:
+            - http:
+                  path: /order/fulfill
+                  method: post
+        environment:
+            orderTableName: ordersTable
+            orderStreamName: order-events
+    notifyCakeProducer:
+        handler: handler.notifyCakeProducer
+        events:
+            - stream:
+                  arn: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
+        environment:
+            region: ${self:provider.region}
+            cakeProducerEmail: cake@thtt.us
+            orderingSystemEmail: order@thtt.us
+
+resources:
+    Resources:
+        orderEventsStream:
+            Type: AWS::Kinesis::Stream
+            Properties:
+                Name: order-events
+                ShardCount: 1
+        orderTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                TableName: ordersTable
+                AttributeDefinitions:
+                    - AttributeName: "orderId"
+                      AttributeType: "S"
+                KeySchema:
+                    - AttributeName: "orderId"
+                      KeyType: "HASH"
+                BillingMode: PAY_PER_REQUEST
