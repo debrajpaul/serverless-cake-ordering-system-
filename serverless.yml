@@ -27,7 +27,14 @@ provider:
           Condition:
               StringEquals:
                   ses:FromAddress:
-                      - order@thtt.us
+                      - debraj@ficuslot.com
+        - Effect: Allow
+          Action:
+              - sqs:SendMessage
+          Resource:
+              - arn:aws:sqs:#{AWS::Region}:#{AWS::AccountId}:deliveryServiceQueue
+              - arn:aws:sqs:#{AWS::Region}:#{AWS::AccountId}:customerServiceQueue
+
 functions:
     createOrder:
         handler: handler.createOrder
@@ -47,15 +54,47 @@ functions:
         environment:
             orderTableName: ordersTable
             orderStreamName: order-events
-    notifyCakeProducer:
-        handler: handler.notifyCakeProducer
+    notifyExternlParties:
+        handler: handler.notifyExternlParties
         events:
             - stream:
                   arn: arn:aws:kinesis:#{AWS::Region}:#{AWS::AccountId}:stream/order-events
         environment:
             region: ${self:provider.region}
-            cakeProducerEmail: cake@thtt.us
-            orderingSystemEmail: order@thtt.us
+            cakeProducerEmail: ahmedsu868@gmail.com
+            orderingSystemEmail: debraj@ficuslot.com
+            deliveryCompanyQueue:
+                Ref: deliveryServiceQueue
+            orderTableName: ordersTable
+    notifyDeliveryCompany:
+        handler: handler.notifyDeliveryCompany
+        events:
+            - sqs:
+                  arn:
+                      Fn::GetAtt:
+                          - deliveryServiceQueue
+                          - Arn
+                  batchSize: 1
+    orderDelivered:
+        handler: handler.orderDelivered
+        events:
+            - http:
+                  path: /order/delivered
+                  method: post
+        environment:
+            region: ${self:provider.region}
+            customerServiceQueue:
+                Ref: customerServiceQueue
+            orderTableName: ordersTable
+    notifyCustomerService:
+        handler: handler.notifyCustomerService
+        events:
+            - sqs:
+                  arn:
+                      Fn::GetAtt:
+                          - customerServiceQueue
+                          - Arn
+                  batchSize: 1
 
 resources:
     Resources:
@@ -75,3 +114,11 @@ resources:
                     - AttributeName: "orderId"
                       KeyType: "HASH"
                 BillingMode: PAY_PER_REQUEST
+        deliveryServiceQueue:
+            Type: AWS::SQS::Queue
+            Properties:
+                QueueName: deliveryServiceQueue
+        customerServiceQueue:
+            Type: AWS::SQS::Queue
+            Properties:
+                QueueName: customerServiceQueue
