@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/debrajpaul/serverless-cake-ordering-system-#readme",
   "dependencies": {
-    "aws-sdk": "^2.543.0",
+    "aws-sdk": "^2.814.0",
     "serverless-pseudo-parameters": "^2.5.0",
     "uuid": "^3.3.3"
   }
