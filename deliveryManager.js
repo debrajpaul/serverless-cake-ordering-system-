@@ -16,8 +16,8 @@ module.exports.deliveryOrders = orderFulfilled => {
         const temp = orderManager
             .updateOrderForDelivery(order.orderId)
             .then(updatedOrder => {
-                orderManager.saveOrder(updatedOrder).then(() => {
-                    notifyDeliveryCompany(updatedOrder);
+                return orderManager.saveOrder(updatedOrder).then(() => {
+                    return notifyDeliveryCompany(updatedOrder);
                 });
             });
         orderFulfilledPromises.push(temp);
